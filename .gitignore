@@ -1,0 +1,6 @@
+node_modules
+.next
+.env.local
+extract.txt
+tsconfig.tsbuildinfo
+npm-debug.log*

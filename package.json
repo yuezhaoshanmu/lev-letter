@@ -1,0 +1,31 @@
+{
+  "name": "letter-for-rao-rao",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "parse-letter": "tsx scripts/parse-letter.ts",
+    "predev": "npm run parse-letter",
+    "dev": "next dev",
+    "prebuild": "npm run parse-letter",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
+    "framer-motion": "^12.34.0",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.468.0",
+    "mammoth": "^1.9.1",
+    "next": "^15.5.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
