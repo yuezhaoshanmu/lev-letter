@@ -100,8 +100,11 @@ button:focus-visible, input:focus-visible { outline: 1px solid rgba(198, 232, 22
 .progress-end { position: absolute; left: calc(50% - 2px); bottom: 0; width: 5px; height: 5px; border: 1px solid rgba(179, 215, 207, .4); border-radius: 50%; }
 .reading-progress .progress-butterfly { top: calc(var(--progress, 0) * 100%); transition: top .3s ease-out; }
 
-.music-toggle { position: fixed; right: 2rem; bottom: 1.8rem; z-index: 4; display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid rgba(180, 216, 207, .25); border-radius: 50%; background: rgba(9, 35, 36, .3); color: rgba(206, 229, 222, .7); cursor: pointer; backdrop-filter: blur(9px); transition: border-color .3s ease, color .3s ease; }
-.music-toggle:hover { border-color: rgba(198, 234, 224, .7); color: #edf9f3; }
+.music-toggle { position: fixed; right: 2rem; bottom: 1.8rem; z-index: 4; display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid rgba(180, 216, 207, .25); border-radius: 50%; background: rgba(9, 35, 36, .3); color: rgba(206, 229, 222, .7); cursor: pointer; backdrop-filter: blur(9px); transition: border-color .3s ease, color .3s ease, box-shadow .6s ease, opacity .3s ease; }
+.music-toggle:hover { border-color: rgba(198, 234, 224, .7); color: #edf9f3; box-shadow: 0 0 16px rgba(86, 185, 180, .14); }
+.music-toggle.is-playing { color: rgba(219, 240, 231, .86); box-shadow: 0 0 12px rgba(86, 185, 180, .1); }
+.music-toggle.is-loading { opacity: .48; cursor: wait; }
+.music-toggle:disabled { cursor: wait; }
 
 .password-gate { display: grid; place-items: center; padding: 2rem; transition: opacity .5s ease, transform .5s ease; }
 .password-gate.is-unlocking { opacity: 0; transform: translateY(-6px); pointer-events: none; }
@@ -196,4 +199,5 @@ button:focus-visible, input:focus-visible { outline: 1px solid rgba(198, 232, 22
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
   .reveal { opacity: 1; transform: none; }
+  .music-toggle.is-playing { box-shadow: none; }
 }

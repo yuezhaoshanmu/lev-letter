@@ -48,20 +48,22 @@ export default function LetterExperience({ data, passwordRequired, initialUnlock
   const changeMood = useCallback((nextMood: string) => setMood(nextMood), []);
 
   if (!ready) return <div className="preload-screen" aria-hidden="true" />;
-  if (passwordRequired && !unlocked) return <><AmbientBackground mood="forest" /><PasswordGate onUnlock={unlock} /></>;
-  if (!data) return null;
+  const gate = passwordRequired && !unlocked;
+  if (!gate && !data) return null;
   return (
-    <div className={`letter-experience stage-${stage}`} data-mood={mood}>
-      <AmbientBackground mood={mood} />
-      {stage === "opening" || stage === "leaving" ? <OpeningScene closing={stage === "leaving"} onOpen={open} onTitleClick={clickTitle} /> : null}
-      {stage === "reader" ? <LetterReader data={data} onNext={next} onMoodChange={changeMood} /> : null}
-      {stage === "ending" ? <EndingScene onBack={back} /> : null}
-      <MusicToggle />
-      <div className={`easter-egg ${eggVisible ? "is-visible" : ""}`} role="status" aria-live="polite">
+    <>
+      {gate ? <><AmbientBackground mood="forest" /><PasswordGate onUnlock={unlock} /></> : <div className={`letter-experience stage-${stage}`} data-mood={mood}>
+        <AmbientBackground mood={mood} />
+        {stage === "opening" || stage === "leaving" ? <OpeningScene closing={stage === "leaving"} onOpen={open} onTitleClick={clickTitle} /> : null}
+        {stage === "reader" ? <LetterReader data={data!} onNext={next} onMoodChange={changeMood} /> : null}
+        {stage === "ending" ? <EndingScene onBack={back} /> : null}
+      </div>}
+      <MusicToggle visible={!gate} />
+      {!gate ? <div className={`easter-egg ${eggVisible ? "is-visible" : ""}`} role="status" aria-live="polite">
         <span>你发现这里了。</span>
         <span>其实我也不知道该藏些什么。</span>
         <span>只是觉得，如果是你，也许会点到这里。</span>
-      </div>
-    </div>
+      </div> : null}
+    </>
   );
 }

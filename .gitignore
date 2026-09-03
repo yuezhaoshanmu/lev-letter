@@ -4,3 +4,4 @@ node_modules
 extract.txt
 tsconfig.tsbuildinfo
 npm-debug.log*
+*.flac

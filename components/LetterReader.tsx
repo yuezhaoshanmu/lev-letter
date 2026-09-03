@@ -86,7 +86,7 @@ export default function LetterReader({ data, onNext, onMoodChange }: LetterReade
       <ReadingProgress progress={progress} />
       <header className="letter-header reveal">
         <span className="eyebrow">a private letter</span>
-        <h1>给饶饶</h1>
+        <h1>致饶饶</h1>
         <p>从一个夏天写到另一个清晨。</p>
         <div className="header-mark"><span /> <Butterfly variant="moon" /></div>
       </header>

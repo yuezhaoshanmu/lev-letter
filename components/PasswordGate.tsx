@@ -3,6 +3,7 @@
 import { ArrowUpRight } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMusic } from "./AudioProvider";
 
 type PasswordGateProps = { onUnlock: (role: "letter" | "admin") => void };
 
@@ -12,12 +13,15 @@ export default function PasswordGate({ onUnlock }: PasswordGateProps) {
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
+  const { startForLetterUnlock, confirmLetterUnlock, cancelPreparedPlayback } = useMusic();
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!password.trim() || busy) return;
     setBusy(true);
     setError(false);
+    // Keep this call in the submit gesture before any network await.
+    void startForLetterUnlock();
     try {
       const response = await fetch("/api/unlock", {
         method: "POST",
@@ -27,14 +31,17 @@ export default function PasswordGate({ onUnlock }: PasswordGateProps) {
       const result = await response.json();
       if (!response.ok) throw new Error("incorrect");
       if (result.role === "admin") {
+        cancelPreparedPlayback();
         onUnlock(result.role);
         return;
       }
       if (result.role === "letter") {
+        confirmLetterUnlock();
         setUnlocking(true);
         window.setTimeout(() => router.refresh(), 500);
       }
     } catch {
+      cancelPreparedPlayback();
       setError(true);
     } finally {
       setBusy(false);
