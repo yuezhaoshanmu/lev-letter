@@ -13,7 +13,7 @@ type Stage = "opening" | "leaving" | "reader" | "ending";
 type LetterExperienceProps = { data: LetterData | null; passwordRequired: boolean; initialUnlocked?: boolean };
 
 export default function LetterExperience({ data, passwordRequired, initialUnlocked = false }: LetterExperienceProps) {
-  const [unlocked, setUnlocked] = useState(!passwordRequired || initialUnlocked);
+  const unlocked = !passwordRequired || initialUnlocked;
   const [ready, setReady] = useState(true);
   const [stage, setStage] = useState<Stage>("opening");
   const [mood, setMood] = useState("forest");
@@ -22,7 +22,6 @@ export default function LetterExperience({ data, passwordRequired, initialUnlock
 
   const unlock = (role: "letter" | "admin") => {
     if (role === "admin") window.location.assign("/admin");
-    else setUnlocked(true);
   };
   const open = () => {
     setStage("leaving");

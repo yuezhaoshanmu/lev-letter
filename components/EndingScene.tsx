@@ -8,7 +8,7 @@ import Butterfly from "./Butterfly";
 type Choice = "yes" | "no" | "thinking";
 type EndingSceneProps = { onBack: () => void };
 const copy: Record<Choice, string[]> = {
-  yes: ["我看见这一页了。", "那剩下的，我们以后慢慢写。"],
+  yes: ["那剩下的，我们以后慢慢写。"],
   no: ["我知道了。", "谢谢你认真读到了这里。", "这本书不会因为答案不同，就否认这一页曾经存在。"],
   thinking: ["好。", "这一页可以先留白。", "你慢慢想。"],
 };

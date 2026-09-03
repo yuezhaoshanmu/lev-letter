@@ -2,13 +2,16 @@
 
 import { ArrowUpRight } from "lucide-react";
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type PasswordGateProps = { onUnlock: (role: "letter" | "admin") => void };
 
 export default function PasswordGate({ onUnlock }: PasswordGateProps) {
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -23,7 +26,14 @@ export default function PasswordGate({ onUnlock }: PasswordGateProps) {
       });
       const result = await response.json();
       if (!response.ok) throw new Error("incorrect");
-      onUnlock(result.role);
+      if (result.role === "admin") {
+        onUnlock(result.role);
+        return;
+      }
+      if (result.role === "letter") {
+        setUnlocking(true);
+        window.setTimeout(() => router.refresh(), 500);
+      }
     } catch {
       setError(true);
     } finally {
@@ -32,7 +42,7 @@ export default function PasswordGate({ onUnlock }: PasswordGateProps) {
   };
 
   return (
-    <main className="password-gate">
+    <main className={`password-gate ${unlocking ? "is-unlocking" : ""}`}>
       <div className="password-gate-inner">
         <span className="eyebrow">Private letter · 2026</span>
         <h1>这封信只写给一个人。</h1>
@@ -41,7 +51,7 @@ export default function PasswordGate({ onUnlock }: PasswordGateProps) {
           <label htmlFor="letter-password">你的生日（月日）</label>
           <div className="password-row">
             <input id="letter-password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" inputMode="numeric" autoComplete="off" autoFocus aria-invalid={error} />
-            <button type="submit" aria-label="打开信件" disabled={busy}><ArrowUpRight size={18} strokeWidth={1.25} /></button>
+            <button type="submit" aria-label="打开信件" disabled={busy || unlocking}><ArrowUpRight size={18} strokeWidth={1.25} /></button>
           </div>
           <span className={`password-error ${error ? "is-visible" : ""}`} role="status">这句暗号不对，再想一想。</span>
         </form>

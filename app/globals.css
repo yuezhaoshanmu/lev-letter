@@ -103,7 +103,8 @@ button:focus-visible, input:focus-visible { outline: 1px solid rgba(198, 232, 22
 .music-toggle { position: fixed; right: 2rem; bottom: 1.8rem; z-index: 4; display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid rgba(180, 216, 207, .25); border-radius: 50%; background: rgba(9, 35, 36, .3); color: rgba(206, 229, 222, .7); cursor: pointer; backdrop-filter: blur(9px); transition: border-color .3s ease, color .3s ease; }
 .music-toggle:hover { border-color: rgba(198, 234, 224, .7); color: #edf9f3; }
 
-.password-gate { display: grid; place-items: center; padding: 2rem; }
+.password-gate { display: grid; place-items: center; padding: 2rem; transition: opacity .5s ease, transform .5s ease; }
+.password-gate.is-unlocking { opacity: 0; transform: translateY(-6px); pointer-events: none; }
 .password-gate-inner { width: min(440px, 100%); }
 .password-gate h1 { margin: 1.8rem 0 .9rem; color: var(--moon); font: 400 clamp(1.9rem, 5vw, 2.8rem)/1.35 var(--serif); letter-spacing: .08em; }
 .password-gate p { max-width: 24em; margin: 0 0 3.1rem; color: rgba(211, 229, 223, .62); line-height: 1.9; }

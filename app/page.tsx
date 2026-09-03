@@ -4,6 +4,8 @@ import letterData from "../data/letter.json";
 import { cookies } from "next/headers";
 import { verifySession } from "../lib/session";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const passwordRequired = Boolean(process.env.LETTER_PASSWORD || process.env.ADMIN_PASSWORD);
   const jar = await cookies();
