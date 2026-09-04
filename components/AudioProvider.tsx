@@ -15,7 +15,7 @@ type MusicContextValue = {
   confirmLetterUnlock: () => void;
   cancelPreparedPlayback: () => void;
   pauseMusic: () => void;
-  resumeMusic: () => void;
+  resumeMusic: () => Promise<boolean>;
 };
 
 const MusicContext = createContext<MusicContextValue | null>(null);
@@ -70,17 +70,12 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     if (!audio) return Promise.resolve();
     stopFade();
     shouldBePlayingRef.current = false;
+    preparedPlayRef.current = null;
     audio.volume = 0;
-    setIsLoading(true);
-    if (process.env.NODE_ENV !== "production") console.debug("[music] gesture play requested");
-    const playPromise = audio.play();
-    preparedPlayRef.current = playPromise;
-    playPromise.then(() => {
-      if (process.env.NODE_ENV !== "production") console.debug("[music] play succeeded");
-    }).catch((error: unknown) => {
-      if (process.env.NODE_ENV !== "production") console.debug("[music] play blocked", error instanceof DOMException ? error.name : "unknown");
-    });
-    return playPromise.catch(() => undefined);
+    audio.loop = true;
+    setIsLoading(false);
+    // Password submission only prepares the player. Playback starts from an explicit music choice.
+    return Promise.resolve();
   }, [stopFade]);
 
   const confirmLetterUnlock = useCallback(() => {
@@ -124,19 +119,24 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     fadeTo(0, FADE_OUT_MS, () => audio.pause());
   }, [fadeTo]);
 
-  const resumeMusic = useCallback(() => {
+  const resumeMusic = useCallback(async () => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) return false;
     stopFade();
     setIsLoading(true);
     audio.volume = 0;
-    const playPromise = audio.play();
+    audio.loop = true;
     preparedPlayRef.current = null;
-    playPromise.then(beginFadeIn).catch(() => {
+    try {
+      await audio.play();
+      beginFadeIn();
+      return true;
+    } catch {
       setIsLoading(false);
       shouldBePlayingRef.current = false;
       setIsPlaying(false);
-    });
+      return false;
+    }
   }, [beginFadeIn, stopFade]);
 
   useEffect(() => {

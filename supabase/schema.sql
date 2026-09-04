@@ -3,7 +3,8 @@ create extension if not exists pgcrypto;
 create table if not exists public.confession_responses (
   id uuid primary key default gen_random_uuid(),
   visitor_id uuid not null,
-  choice text not null check (choice in ('yes', 'no', 'thinking')),
+  choice text check (choice in ('willing', 'friend', 'time')),
+  message text,
   submitted_at timestamptz not null default now()
 );
 

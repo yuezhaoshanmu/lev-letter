@@ -19,10 +19,10 @@ export default function OpeningScene({ closing, onOpen, onTitleClick }: OpeningS
         animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 1.3, ease: [0.22, 1, 0.36, 1] }}
       >
-        <button className="opening-name" type="button" onClick={onTitleClick} aria-label="TO 饶饶，点击五次发现一个小彩蛋">TO 饶饶</button>
+        <button className="opening-name" type="button" onClick={onTitleClick} aria-label="致饶饶，点击五次发现一个小彩蛋">致饶饶</button>
         <span className="opening-rule" />
-        <p className="opening-lead">有些话，我想写得慢一点。</p>
-        <p className="opening-sub">你也可以慢慢看。</p>
+        <p className="opening-lead">不用急着回答。</p>
+        <p className="opening-sub">你可以慢慢读。</p>
         <button className="open-letter" type="button" onClick={onOpen}>
           <span>打开这封信</span><ArrowDownRight size={16} strokeWidth={1.2} />
         </button>

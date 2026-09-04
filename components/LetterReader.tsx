@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowDownRight } from "lucide-react";
 import type { Chapter, LetterData, LetterParagraph } from "../lib/letter";
 import { chapters, highlightParagraphs } from "../lib/letter";
 import Butterfly from "./Butterfly";
@@ -10,6 +9,8 @@ import ReadingProgress from "./ReadingProgress";
 type LetterReaderProps = { data: LetterData; onNext: () => void; onMoodChange: (mood: string) => void };
 
 function Paragraph({ paragraph }: { paragraph: LetterParagraph }) {
+  if (paragraph.sourceIndex >= 1498 && paragraph.sourceIndex <= 1509) return null;
+  if (paragraph.sourceIndex === 1497) return <p className="letter-paragraph letter-opening-replacement reveal">不用急着回答。<br />也不用急着决定什么。<br />你可以慢慢读。<br />如果某一句话，<br />刚好落在你的心里。<br />那就已经很好。</p>;
   if (paragraph.type === "blank") return <div className="letter-blank" aria-hidden="true" data-source-index={paragraph.sourceIndex} />;
   if (paragraph.type === "rule") return <div className="letter-rule" data-source-index={paragraph.sourceIndex} aria-hidden="true" />;
   const breathing = highlightParagraphs.has(paragraph.sourceIndex);
@@ -22,9 +23,10 @@ function Paragraph({ paragraph }: { paragraph: LetterParagraph }) {
 }
 
 function ChapterMarker({ chapter }: { chapter: Chapter }) {
+  const chapterNumber = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"].indexOf(chapter.number) + 1;
   return (
     <div className="chapter-marker reveal" data-chapter={chapter.number}>
-      <span className="chapter-index">{chapter.number} / 15</span>
+      <span className="chapter-index">Chapter {String(chapterNumber).padStart(2, "0")}</span>
       <span className="chapter-line" />
       <span className="chapter-title">{chapter.title}</span>
       <Butterfly className="chapter-butterfly" variant={chapter.mood === "memory" ? "green" : "moon"} />
@@ -45,6 +47,14 @@ export default function LetterReader({ data, onNext, onMoodChange }: LetterReade
     });
     return groups;
   }, [data.paragraphs]);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("letter_reading_position");
+      if (saved) window.setTimeout(() => window.scrollTo({ top: Number(saved), behavior: "smooth" }), 80);
+    } catch {
+    }
+  }, []);
 
   useEffect(() => {
     const nodes = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
@@ -100,9 +110,11 @@ export default function LetterReader({ data, onNext, onMoodChange }: LetterReade
       </article>
       <footer className="letter-end reveal">
         <Butterfly className="letter-end-butterfly" variant="moon" />
-        <span className="eyebrow">end of this page</span>
-        <p>下一页</p>
-        <button type="button" className="next-page-button" onClick={onNext}><span>继续</span><ArrowDownRight size={16} strokeWidth={1.15} /></button>
+        <span className="eyebrow">A QUIET MOMENT</span>
+        <p className="letter-end-main">有些话。<br />写完以后，<br />需要一点时间沉淀。</p>
+        <div className="letter-end-breath" aria-hidden="true"><span /><span /><span /></div>
+        <p className="letter-end-follow">如果你愿意。<br />我们继续往下走。</p>
+        <button type="button" className="letter-end-continue" onClick={onNext}>继续听我说</button>
       </footer>
     </div>
   );

@@ -3,7 +3,7 @@ import "./globals.css";
 import AudioProvider from "../components/AudioProvider";
 
 export const metadata: Metadata = {
-  title: "给饶饶的一封信",
+  title: "致饶饶的一封信",
   description: "",
   robots: { index: false, follow: false },
 };

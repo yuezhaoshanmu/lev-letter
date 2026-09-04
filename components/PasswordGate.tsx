@@ -13,7 +13,7 @@ export default function PasswordGate({ onUnlock }: PasswordGateProps) {
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
-  const { startForLetterUnlock, confirmLetterUnlock, cancelPreparedPlayback } = useMusic();
+  const { startForLetterUnlock, cancelPreparedPlayback } = useMusic();
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -36,9 +36,11 @@ export default function PasswordGate({ onUnlock }: PasswordGateProps) {
         return;
       }
       if (result.role === "letter") {
-        confirmLetterUnlock();
         setUnlocking(true);
-        window.setTimeout(() => router.refresh(), 500);
+        window.setTimeout(() => {
+          onUnlock(result.role);
+          router.refresh();
+        }, 650);
       }
     } catch {
       cancelPreparedPlayback();
@@ -52,15 +54,16 @@ export default function PasswordGate({ onUnlock }: PasswordGateProps) {
     <main className={`password-gate ${unlocking ? "is-unlocking" : ""}`}>
       <div className="password-gate-inner">
         <span className="eyebrow">Private letter · 2026</span>
-        <h1>这封信只写给一个人。</h1>
-        <p>如果你知道它属于谁，就输入那句只属于我们的暗号。</p>
+        <span className={`unlock-success ${unlocking ? "is-visible" : ""}`} aria-live="polite">门开了。</span>
+        <h1>有一扇门。<br />只有你知道怎么打开。</h1>
+        <p>有些门，只认得一个人的脚步。</p>
         <form onSubmit={submit}>
           <label htmlFor="letter-password">你的生日（月日）</label>
           <div className="password-row">
             <input id="letter-password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" inputMode="numeric" autoComplete="off" autoFocus aria-invalid={error} />
             <button type="submit" aria-label="打开信件" disabled={busy || unlocking}><ArrowUpRight size={18} strokeWidth={1.25} /></button>
           </div>
-          <span className={`password-error ${error ? "is-visible" : ""}`} role="status">这句暗号不对，再想一想。</span>
+          <span className={`password-error ${error ? "is-visible" : ""}`} role="status">这扇门还没有认出你。</span>
         </form>
       </div>
     </main>

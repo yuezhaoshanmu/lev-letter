@@ -1,6 +1,5 @@
 "use client";
 
-import { Music2 } from "lucide-react";
 import { useMusic } from "./AudioProvider";
 
 type MusicToggleProps = { visible?: boolean };
@@ -11,8 +10,8 @@ export default function MusicToggle({ visible = true }: MusicToggleProps) {
   const toggle = () => (isPlaying ? pauseMusic() : resumeMusic());
 
   return (
-    <button className={`music-toggle${isPlaying ? " is-playing" : ""}${isLoading ? " is-loading" : ""}`} type="button" onClick={toggle} aria-label={isPlaying ? "暂停背景音乐" : "播放背景音乐"} title={isPlaying ? "暂停背景音乐" : "播放背景音乐"} aria-pressed={isPlaying} disabled={isLoading}>
-      <Music2 size={15} strokeWidth={1.3} aria-hidden="true" />
+    <button className={`music-toggle${isPlaying ? " is-playing" : ""}${isLoading ? " is-loading" : ""}`} type="button" onClick={toggle} aria-label={isPlaying ? "暂停这一页的声音" : "打开这一页的声音"} title={isPlaying ? "暂停这一页的声音" : "打开这一页的声音"} aria-pressed={isPlaying} disabled={isLoading}>
+      <span className="music-symbol" aria-hidden="true">{isPlaying ? "♫" : "♪"}</span>
     </button>
   );
 }

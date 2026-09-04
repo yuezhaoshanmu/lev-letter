@@ -1,14 +1,7 @@
-import Butterfly from "./Butterfly";
-
 type ReadingProgressProps = { progress: number };
 
 export default function ReadingProgress({ progress }: ReadingProgressProps) {
   const safeProgress = Math.max(0, Math.min(1, progress));
-  return (
-    <aside className="reading-progress" aria-label="阅读进度" style={{ ["--progress" as string]: safeProgress }}>
-      <div className="progress-track"><div className="progress-fill" style={{ height: `${safeProgress * 100}%`, width: `${safeProgress * 100}%` }} /></div>
-      <Butterfly variant="moon" className="progress-butterfly" />
-      <span className="progress-end" aria-hidden="true" />
-    </aside>
-  );
+  const page = Math.min(99, Math.max(1, Math.floor(safeProgress * 99) + 1));
+  return <aside className="reading-progress" aria-label={`第 ${page} 页`}><span>第 {String(page).padStart(2, "0")} 页</span></aside>;
 }
