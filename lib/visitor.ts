@@ -3,7 +3,10 @@ export type VisitorEvent = { event_type: string; event_data?: Record<string, unk
 export function visitorClientScript() {
   return `
     (function () {
-      if (location.pathname === "/admin" || document.cookie.indexOf("admin_session=") !== -1) return;
+      var pathname = location.pathname;
+      var skip = pathname.startsWith("/admin");
+      console.debug("[visitor] start", { pathname: pathname, skip: skip, skipReason: skip ? "admin_path" : null });
+      if (skip) return;
       var id = sessionStorage.getItem("visitor_id");
       var started = Date.now();
       function post(url, body, beacon) {
@@ -11,7 +14,7 @@ export function visitorClientScript() {
         if (beacon && navigator.sendBeacon) navigator.sendBeacon(url, new Blob([payload], {type:"application/json"}));
         else fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body:payload, keepalive:true}).catch(function(){});
       }
-      if (!id) fetch("/api/visitor/start", {method:"POST", keepalive:true}).then(function(r){return r.json()}).then(function(x){
+      if (!id) fetch("/api/visitor/start", {method:"POST", headers:{"X-Visitor-Pathname":pathname}, keepalive:true}).then(function(r){return r.json()}).then(function(x){
         if (x.visitor_id) { id=x.visitor_id; sessionStorage.setItem("visitor_id", id); post("/api/visitor/event",{visitor_id:id,event_type:"enter_site"}); }
       }).catch(function(){});
       window.__visitorEvent = function(type, data, page) { if (id) post("/api/visitor/event",{visitor_id:id,event_type:type,event_data:data||{},last_page:page||location.pathname}); };
