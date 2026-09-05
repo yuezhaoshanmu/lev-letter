@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowDownRight } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import Butterfly from "./Butterfly";
 
@@ -19,14 +18,12 @@ export default function OpeningScene({ closing, onOpen, onTitleClick }: OpeningS
         animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 1.3, ease: [0.22, 1, 0.36, 1] }}
       >
-        <button className="opening-name" type="button" onClick={onTitleClick} aria-label="致饶饶，点击五次发现一个小彩蛋">致饶饶</button>
-        <span className="opening-rule" />
-        <p className="opening-lead">不用急着回答。</p>
-        <p className="opening-sub">你可以慢慢读。</p>
+        <p className="opening-lead">有一扇门。</p>
+        <p className="opening-sub">只有一个人，<br />知道怎么打开。</p>
         <button className="open-letter" type="button" onClick={onOpen}>
-          <span>打开这封信</span><ArrowDownRight size={16} strokeWidth={1.2} />
+          <span>翻开这一页</span>
         </button>
-        <p className="opening-date">a letter written in the blue hour</p>
+        <button className="opening-name" type="button" onClick={onTitleClick} aria-label="致饶饶，点击五次发现一个小彩蛋">致饶饶</button>
       </motion.div>
       <span className="opening-corner opening-corner-left">夏末</span>
       <span className="opening-corner opening-corner-right">/ 01</span>

@@ -49,7 +49,7 @@ export default function EndingBuffer({ onContinue }: EndingBufferProps) {
         </AnimatePresence>
         <nav className="chapter-navigation" aria-label="章节翻页">
           {!isCover ? <button type="button" className="chapter-nav-back" onClick={retreat}><ArrowLeft size={15} strokeWidth={1.15} /><span>上一页</span></button> : <span />}
-          {isClosing ? <button className="ending-buffer-continue" type="button" onClick={onContinue}><span>继续往后走</span><ArrowDownRight size={16} strokeWidth={1.15} /></button> : <button className="ending-buffer-continue" type="button" onClick={advance}><span>{isCover ? "翻开这一页" : "下一页"}</span><ArrowRight size={16} strokeWidth={1.15} /></button>}
+          {isClosing ? <button className="ending-buffer-continue" type="button" onClick={onContinue}><span>继续往后走</span><ArrowDownRight size={16} strokeWidth={1.15} /></button> : <button className="ending-buffer-continue" type="button" onClick={advance}><span>下一页</span><ArrowRight size={16} strokeWidth={1.15} /></button>}
         </nav>
       </div>
     </motion.main>

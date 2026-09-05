@@ -4,25 +4,24 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { LetterData } from "../lib/letter";
 import AmbientBackground from "./AmbientBackground";
-import BookOpening from "./BookOpening";
 import EndingBuffer from "./EndingBuffer";
 import FutureLetter from "./FutureLetter";
 import LetterReader from "./LetterReader";
 import MusicInvitation from "./MusicInvitation";
 import MusicToggle from "./MusicToggle";
-import OpeningScene from "./OpeningScene";
+import NameReveal from "./NameReveal";
 import PasswordGate from "./PasswordGate";
 import UnlockRitual from "./UnlockRitual";
 import { useMusic } from "./AudioProvider";
 
-type Stage = "ritual" | "book-opening" | "opening" | "leaving" | "reader" | "buffer" | "future-letter";
+type Stage = "ritual" | "name-reveal" | "leaving" | "reader" | "buffer" | "future-letter";
 type LetterExperienceProps = { data: LetterData | null; passwordRequired: boolean; initialUnlocked?: boolean };
 
 export default function LetterExperience({ data, passwordRequired, initialUnlocked = false }: LetterExperienceProps) {
   const unlocked = !passwordRequired || initialUnlocked;
   const [hasLetterAccess, setHasLetterAccess] = useState(unlocked);
   const [ready, setReady] = useState(true);
-  const [stage, setStage] = useState<Stage>("opening");
+  const [stage, setStage] = useState<Stage>("ritual");
   const [mood, setMood] = useState("forest");
   const [eggClicks, setEggClicks] = useState(0);
   const [eggVisible, setEggVisible] = useState(false);
@@ -34,14 +33,7 @@ export default function LetterExperience({ data, passwordRequired, initialUnlock
     if (role === "admin") window.location.assign("/admin");
     if (role === "letter") {
       setHasLetterAccess(true);
-      try {
-        const choice = window.localStorage.getItem("musicChoice");
-        const hasChoice = choice === "played" || choice === "skipped";
-        setStage(hasChoice ? "book-opening" : "ritual");
-        if (!hasChoice) window.sessionStorage.setItem("music_invitation_pending", "true");
-      } catch {
-        setStage("ritual");
-      }
+      setStage("ritual");
     }
   };
   const openSound = async () => {
@@ -55,7 +47,7 @@ export default function LetterExperience({ data, passwordRequired, initialUnlock
       }
       await new Promise<void>((resolve) => window.setTimeout(resolve, 700));
       router.refresh();
-      setStage("book-opening");
+      setStage("name-reveal");
     }
   };
   const skipSound = () => {
@@ -66,15 +58,15 @@ export default function LetterExperience({ data, passwordRequired, initialUnlock
     } catch {
     }
     setMusicInvitationVisible(false);
-    setStage("book-opening");
+    setStage("name-reveal");
   };
-  const finishBookOpening = useCallback(() => setStage("opening"), []);
-  const open = () => {
+  const finishMusicInvitation = useCallback(() => setStage("name-reveal"), []);
+  const finishNameReveal = () => {
     setStage("leaving");
     window.setTimeout(() => {
       setStage("reader");
-      window.setTimeout(() => document.getElementById("letter")?.scrollIntoView({ behavior: "smooth" }), 80);
-    }, 1100);
+      window.setTimeout(() => document.getElementById("letter")?.scrollIntoView({ behavior: "smooth" }), 40);
+    }, 350);
   };
   const next = () => {
     setStage("buffer");
@@ -99,7 +91,7 @@ export default function LetterExperience({ data, passwordRequired, initialUnlock
   const gate = passwordRequired && !hasLetterAccess;
 
   useEffect(() => {
-    if (gate || stage === "ritual" || stage === "book-opening" || typeof window === "undefined") return;
+    if (gate || stage === "ritual" || typeof window === "undefined") return;
     try {
       const choice = window.localStorage.getItem("musicChoice");
       const pending = window.sessionStorage.getItem("music_invitation_pending") === "true";
@@ -119,20 +111,19 @@ export default function LetterExperience({ data, passwordRequired, initialUnlock
   }, [gate, isPlaying, stage]);
 
   if (!ready) return <div className="preload-screen" aria-hidden="true" />;
-  if (!gate && !data && stage !== "ritual" && stage !== "book-opening") return null;
+  if (!gate && !data && stage !== "ritual") return null;
   return (
     <>
       {gate ? <><AmbientBackground mood="forest" /><PasswordGate onUnlock={unlock} /></> : <div className={`letter-experience stage-${stage}`} data-mood={mood}>
         <AmbientBackground mood={mood} />
         {stage === "ritual" ? <UnlockRitual onOpenSound={openSound} onSkipSound={skipSound} /> : null}
-        {stage === "book-opening" ? <BookOpening onComplete={finishBookOpening} /> : null}
-        {stage === "opening" || stage === "leaving" ? <OpeningScene closing={stage === "leaving"} onOpen={open} onTitleClick={clickTitle} /> : null}
+        {stage === "name-reveal" ? <NameReveal onComplete={finishNameReveal} /> : null}
         {stage === "reader" && data ? <LetterReader data={data} onNext={next} onMoodChange={changeMood} /> : null}
         {stage === "buffer" ? <EndingBuffer onContinue={continueToChoice} /> : null}
         {stage === "future-letter" ? <FutureLetter onBack={back} /> : null}
       </div>}
-      <MusicToggle visible={!gate && stage !== "ritual" && stage !== "book-opening"} />
-      <MusicInvitation visible={!gate && stage !== "ritual" && stage !== "book-opening" && musicInvitationVisible} onClose={() => setMusicInvitationVisible(false)} />
+      <MusicToggle visible={!gate && stage !== "ritual"} />
+      <MusicInvitation visible={false} onClose={finishMusicInvitation} />
       {!gate ? <div className={`easter-egg ${eggVisible ? "is-visible" : ""}`} role="status" aria-live="polite">
         <span>你发现这里了。</span>
         <span>其实我也不知道该藏些什么。</span>

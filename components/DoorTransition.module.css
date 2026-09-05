@@ -1,0 +1,33 @@
+.transition { position: absolute; inset: 0; overflow: hidden; pointer-events: none; letter-spacing: 0; }
+.confirmation { position: absolute; inset: 0; display: grid; place-items: center; color: var(--moon); font-size: 1rem; opacity: 0; animation: confirmation 1.6s linear both; }
+.scene { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; animation: awaken 1s 1.6s ease both; }
+.frame { position: relative; width: min(54vw, 310px, 43svh); aspect-ratio: 0.55; perspective: 1100px; border: 2px solid #527c84; background: #172c2c; box-shadow: 0 0 0 7px #102c2c, 0 0 0 8px #365459, 0 18px 38px #031317; }
+.beyond { position: absolute; inset: 0; background: linear-gradient(90deg, #203b39, #61726a 65%, #b0ac8b); box-shadow: inset 12px 0 24px #0a2329; animation: warmth 3s 2.4s ease-in-out both; }
+.leaf { position: absolute; inset: 0; transform-origin: left center; backface-visibility: hidden; background: repeating-linear-gradient(91deg, transparent 0 6px, #a8c7a108 7px, #031d1b33 8px, transparent 10px 18px), linear-gradient(100deg, #183d33, #102f28 65%, #234439); border: 1px solid #61818a; box-shadow: inset -4px 0 3px #071b1c, inset 3px 0 4px #70938b33; animation: swing 3s 2.4s cubic-bezier(.42, 0, .22, 1) both; }
+.upperPanel, .lowerPanel { position: absolute; left: 13%; right: 13%; border: 5px ridge #28473d; box-shadow: inset 3px 4px 12px #071e21; }
+.upperPanel { top: 9%; height: 43%; }
+.lowerPanel { top: 61%; bottom: 9%; }
+.handle { position: absolute; right: 7%; top: 55%; width: 6%; height: 2%; border-radius: 2px; background: #b3ac83; box-shadow: 1px 2px 3px #061717; }
+.seam { position: absolute; right: -1px; top: 0; bottom: 0; width: 2px; background: #e9dbad; box-shadow: 0 0 12px 3px #ead7a76b; animation: seam 3s 2.4s ease both; }
+.spill { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 52%, #d3ce9c36, #7bacb124 38%, transparent 75%); opacity: 0; animation: spill 3s 2.4s ease both; }
+.flight { position: absolute; top: 48%; left: 50%; width: 34px; color: #99d0d2; opacity: 0; animation: flight 3.6s 1.8s ease-in-out both; }
+.flight svg { display: block; width: 100%; }
+.dust { position: absolute; left: 50%; top: 50%; width: min(54vw, 310px, 43svh); height: 150px; transform: translate(-50%, -50%); }
+.dust i { position: absolute; width: 2px; height: 2px; background: #d4dfca; border-radius: 50%; opacity: 0; animation: dust 3s 2s ease both; }
+.dust i:nth-child(1) { left: 12%; top: 30%; }
+.dust i:nth-child(2) { left: 77%; top: 12%; animation-delay: 2.2s; }
+.dust i:nth-child(3) { left: 65%; top: 82%; animation-delay: 2.4s; }
+.dust i:nth-child(4) { left: 32%; top: 65%; animation-delay: 2.1s; }
+.dust i:nth-child(5) { left: 91%; top: 51%; animation-delay: 2.3s; }
+@keyframes confirmation { 0% { opacity: 0; } 25%, 75% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes awaken { from { opacity: 0; } to { opacity: 1; } }
+@keyframes swing { from { transform: rotateY(0); } to { transform: rotateY(-102deg); } }
+@keyframes warmth { from { filter: brightness(.5); } to { filter: brightness(1.15); } }
+@keyframes seam { 0% { opacity: 0; } 20%, 65% { opacity: .85; } 100% { opacity: .3; } }
+@keyframes spill { from { opacity: 0; } to { opacity: 1; } }
+@keyframes flight { 0% { opacity: 0; transform: translate(-145px, 55px) scale(1); } 25% { opacity: .7; transform: translate(-100px, -35px) scale(1); } 55% { opacity: .8; transform: translate(35px, 10px) scale(.85); } 80% { opacity: .5; transform: translate(18px, -15px) scale(.5); } 100% { opacity: 0; transform: translate(8px, -23px) scale(.12); } }
+@keyframes dust { 0%, 100% { opacity: 0; } 40% { opacity: .4; } 100% { transform: translateY(-18px); } }
+@media (prefers-reduced-motion: reduce) {
+  .confirmation { animation: none; opacity: 1; }
+  .scene { display: none; }
+}
