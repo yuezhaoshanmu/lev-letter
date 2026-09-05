@@ -5,7 +5,11 @@ export function visitorClientScript() {
     (function () {
       var pathname = location.pathname;
       var skip = pathname.startsWith("/admin");
-      console.debug("[visitor] start", { pathname: pathname, skip: skip, skipReason: skip ? "admin_path" : null });
+      console.debug("[visitor] start", {
+        pathname: pathname,
+        skip: skip,
+        skipReason: skip ? "admin_path" : null
+      });
       if (skip) return;
       var id = sessionStorage.getItem("visitor_id");
       var started = Date.now();

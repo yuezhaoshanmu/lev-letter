@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import AudioProvider from "../components/AudioProvider";
 import VisitorTracker from "../components/VisitorTracker";
@@ -17,7 +18,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <meta name="robots" content="noindex,nofollow" />
         <meta name="theme-color" content="#0b2428" />
       </head>
-      <body><AudioProvider><VisitorTracker />{children}</AudioProvider><script dangerouslySetInnerHTML={{ __html: visitorClientScript() }} /></body>
+      <body>
+        <AudioProvider><VisitorTracker />{children}</AudioProvider>
+        <Script id="visitor-tracker" strategy="afterInteractive">
+          {visitorClientScript()}
+        </Script>
+      </body>
     </html>
   );
 }
