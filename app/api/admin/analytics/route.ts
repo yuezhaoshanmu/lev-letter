@@ -3,15 +3,30 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdmin } from "../../../../lib/supabase-admin";
 import { verifySession } from "../../../../lib/session";
 
-export async function GET() {
-  console.info("[admin analytics] 查询开始", { table: "visitor_logs" });
+export async function GET(request: Request) {
+  const url = new URL(request.url);
   const jar = await cookies();
-  if (!verifySession(jar.get("admin_session")?.value, "admin")) {
+  const isAdmin = verifySession(jar.get("admin_session")?.value, "admin");
+  console.info("[admin analytics] request received", {
+    requestTime: new Date().toISOString(),
+    path: url.pathname,
+    isAdmin,
+  });
+  if (!isAdmin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  console.info("[admin analytics] service role key exists", Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY));
   const db = createSupabaseAdmin();
-  const result = await db.from("visitor_logs").select("*").eq("is_admin", false).order("created_at", { ascending: false }).limit(100);
+  const result = await db.from("visitor_logs").select("*").order("created_at", { ascending: false }).limit(100);
+  console.info("[admin analytics] raw result", {
+    dataLength: result.data?.length ?? 0,
+    error: result.error,
+    errorMessage: result.error?.message,
+    errorDetails: result.error?.details,
+    errorHint: result.error?.hint,
+    errorCode: result.error?.code,
+  });
   if (result.error) {
     console.error("[admin analytics] 查询失败", {
       message: result.error.message,
@@ -23,6 +38,7 @@ export async function GET() {
   }
 
   const logs = result.data ?? [];
+  console.info("[admin analytics] first visitor record", logs[0] ?? null);
   console.info("[admin analytics] 查询完成", { table: "visitor_logs", count: logs.length });
   return NextResponse.json({
     total: logs.length,

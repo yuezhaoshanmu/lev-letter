@@ -8,9 +8,12 @@ export default async function AdminPage() {
   const jar = await cookies();
   if (!verifySession(jar.get("admin_session")?.value, "admin")) redirect("/");
   const db = createSupabaseAdmin();
-  const logsResult = await db.from("visitor_logs").select("*").eq("is_admin", false).order("created_at", { ascending: false }).limit(100);
-  if (logsResult.error) console.error("[admin analytics]", { message: logsResult.error.message, details: logsResult.error.details, hint: logsResult.error.hint, code: logsResult.error.code });
-  else console.info("[admin analytics]", { table: "visitor_logs", count: logsResult.data?.length ?? 0 });
+  const logsResult = await db.from("visitor_logs").select("*").order("created_at", { ascending: false }).limit(100);
+  if (logsResult.error) {
+    console.error("[admin analytics] page query error", logsResult.error);
+    return <main className="admin-page"><div className="admin-inner"><h1>管理员统计加载失败</h1><p>{logsResult.error.message}</p></div></main>;
+  }
+  console.info("[admin analytics] first visitor record", logsResult.data?.[0] ?? null);
   const logs = logsResult.data ?? [];
   const visitorIds = logs.map((log) => log.id);
   const events = visitorIds.length ? (await db.from("visitor_events").select("visitor_id,event_type").in("visitor_id", visitorIds)).data ?? [] : [];
