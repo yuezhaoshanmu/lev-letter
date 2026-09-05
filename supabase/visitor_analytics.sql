@@ -28,3 +28,7 @@ create index if not exists visitor_events_visitor_idx on public.visitor_events(v
 create index if not exists visitor_events_type_idx on public.visitor_events(event_type);
 alter table public.visitor_logs enable row level security;
 alter table public.visitor_events enable row level security;
+drop policy if exists "anon_insert_visitor_logs" on public.visitor_logs;
+create policy "anon_insert_visitor_logs" on public.visitor_logs for insert to anon with check (true);
+drop policy if exists "admin_select_visitor_logs" on public.visitor_logs;
+create policy "admin_select_visitor_logs" on public.visitor_logs for select to authenticated using (true);
