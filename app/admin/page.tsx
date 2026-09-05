@@ -8,8 +8,9 @@ export default async function AdminPage() {
   const jar = await cookies();
   if (!verifySession(jar.get("admin_session")?.value, "admin")) redirect("/");
   const db = createSupabaseAdmin();
-  const logs = (await db.from("visitor_logs").select("*").order("entry_time", { ascending: false }).limit(100)).data ?? [];
-  const events = (await db.from("visitor_events").select("visitor_id,event_type")).data ?? [];
+  const logs = (await db.from("visitor_logs").select("*").eq("is_admin", false).order("entry_time", { ascending: false }).limit(100)).data ?? [];
+  const visitorIds = logs.map((log) => log.id);
+  const events = visitorIds.length ? (await db.from("visitor_events").select("visitor_id,event_type").in("visitor_id", visitorIds)).data ?? [] : [];
   const responsesResult = await db.from("confession_responses").select("id, choice, message, submitted_at").order("submitted_at", { ascending: false });
   const responses = (responsesResult.data ?? []) as Array<{ id: string; choice: "willing" | "friend" | "time" | null; message: string | null; submitted_at: string }>;
   const historyResult = await db.from("response_history").select("id, choice, created_at, ip_address, user_agent", { count: "exact" }).order("created_at", { ascending: false }).limit(200);

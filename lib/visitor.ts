@@ -3,6 +3,7 @@ export type VisitorEvent = { event_type: string; event_data?: Record<string, unk
 export function visitorClientScript() {
   return `
     (function () {
+      if (location.pathname === "/admin" || document.cookie.indexOf("admin_session=") !== -1) return;
       var id = sessionStorage.getItem("visitor_id");
       var started = Date.now();
       function post(url, body, beacon) {

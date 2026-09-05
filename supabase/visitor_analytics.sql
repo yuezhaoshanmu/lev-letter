@@ -8,8 +8,11 @@ create table if not exists public.visitor_logs (
   leave_time timestamptz,
   duration_seconds integer,
   last_page text,
+  is_admin boolean not null default false,
   created_at timestamptz not null default now()
 );
+alter table public.visitor_logs add column if not exists is_admin boolean not null default false;
+create index if not exists visitor_logs_is_admin_idx on public.visitor_logs(is_admin);
 
 create table if not exists public.visitor_events (
   id uuid primary key default gen_random_uuid(),
