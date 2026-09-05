@@ -4,6 +4,7 @@ import { ArrowDownRight, ArrowLeft, ArrowRight } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import Butterfly from "./Butterfly";
+import { trackVisitor } from "./VisitorTracker";
 
 type EndingBufferProps = { onContinue: () => void };
 type ChapterPage = { title: string; lines: string[] };
@@ -24,7 +25,7 @@ export default function EndingBuffer({ onContinue }: EndingBufferProps) {
   const isCover = page === -1;
   const isClosing = page === pages.length;
   const pageData = page >= 0 && page < pages.length ? pages[page] : null;
-  const advance = () => setPage((current) => Math.min(pages.length, current + 1));
+  const advance = () => setPage((current) => { const next = Math.min(pages.length, current + 1); if (next < pages.length) trackVisitor("read_section", { section: pages[next].title }, "/"); return next; });
   const retreat = () => setPage((current) => Math.max(-1, current - 1));
 
   useEffect(() => {

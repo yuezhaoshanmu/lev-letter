@@ -5,6 +5,7 @@ import type { Chapter, LetterData, LetterParagraph } from "../lib/letter";
 import { chapters, highlightParagraphs } from "../lib/letter";
 import Butterfly from "./Butterfly";
 import ReadingProgress from "./ReadingProgress";
+import { trackVisitor } from "./VisitorTracker";
 
 type LetterReaderProps = { data: LetterData; onNext: () => void; onMoodChange: (mood: string) => void };
 
@@ -36,6 +37,7 @@ function ChapterMarker({ chapter }: { chapter: Chapter }) {
 
 export default function LetterReader({ data, onNext, onMoodChange }: LetterReaderProps) {
   const [progress, setProgress] = useState(0);
+  const [visited, setVisited] = useState<string[]>([]);
   const sectionGroups = useMemo(() => {
     const sorted = [...chapters].sort((a, b) => a.at - b.at);
     const groups: Array<{ chapter?: Chapter; paragraphs: LetterParagraph[] }> = [];
@@ -83,13 +85,14 @@ export default function LetterReader({ data, onNext, onMoodChange }: LetterReade
       setProgress(current);
       const sourcePosition = current * data.paragraphs.length;
       const active = chapters.reduce((last, chapter) => (chapter.at <= sourcePosition ? chapter : last), chapters[0]);
+      if (active && !visited.includes(active.title)) { setVisited((prev) => [...prev, active.title]); trackVisitor("read_section", { section: active.title }, "/"); }
       onMoodChange(active?.mood ?? "forest");
     };
     update();
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update, { passive: true });
     return () => { window.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
-  }, [data.paragraphs.length, onMoodChange]);
+  }, [data.paragraphs.length, onMoodChange, visited]);
 
   return (
     <div id="letter" className="letter-shell">

@@ -4,6 +4,7 @@ import { ArrowDownRight, RotateCcw } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import Butterfly from "./Butterfly";
+import { trackVisitor } from "./VisitorTracker";
 
 type Choice = "我愿意试着靠近你" | "我想继续做朋友" | "我需要一点时间";
 type FutureLetterProps = { onBack: () => void };
@@ -56,6 +57,7 @@ export default function FutureLetter({ onBack }: FutureLetterProps) {
   const [messageState, setMessageState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
+    trackVisitor("proposal_page", {}, "/");
     let active = true;
     fetch("/api/choice").then((response) => response.ok ? response.json() : null).then((result) => {
       const stored = typeof result?.choice === "string" ? storedChoiceLabels[result.choice] : undefined;
@@ -74,6 +76,7 @@ export default function FutureLetter({ onBack }: FutureLetterProps) {
     setChoiceState("saving");
     setAnswer(choice);
     setPressedChoice(choice);
+    trackVisitor("proposal_click", { answer: choiceValues[choice] }, "/");
     window.setTimeout(() => setPressedChoice(null), reduceMotion ? 0 : 300);
     const startedAt = performance.now();
     try {

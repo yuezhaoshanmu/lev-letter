@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AudioProvider from "../components/AudioProvider";
+import VisitorTracker from "../components/VisitorTracker";
+import { visitorClientScript } from "../lib/visitor";
 
 export const metadata: Metadata = {
   title: "致饶饶的一封信",
@@ -15,7 +17,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <meta name="robots" content="noindex,nofollow" />
         <meta name="theme-color" content="#0b2428" />
       </head>
-      <body><AudioProvider>{children}</AudioProvider></body>
+      <body><AudioProvider><VisitorTracker />{children}</AudioProvider><script dangerouslySetInnerHTML={{ __html: visitorClientScript() }} /></body>
     </html>
   );
 }

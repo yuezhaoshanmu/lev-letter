@@ -33,3 +33,18 @@ export async function GET() {
     return NextResponse.json({ error: "database" }, { status: 503 });
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const jar = await cookies();
+    if (!verifySession(jar.get("admin_session")?.value, "admin")) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "invalid" }, { status: 400 });
+    const { error } = await createSupabaseAdmin().from("confession_responses").delete().eq("id", id);
+    if (error) return NextResponse.json({ error: "database" }, { status: 503 });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("admin response delete error", error);
+    return NextResponse.json({ error: "database" }, { status: 503 });
+  }
+}

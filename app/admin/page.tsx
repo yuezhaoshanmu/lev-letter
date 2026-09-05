@@ -1,45 +1,49 @@
-import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { createSupabaseAdmin } from "../../lib/supabase-admin";
 import { verifySession } from "../../lib/session";
-import Butterfly from "../../components/Butterfly";
-
-const labels: Record<string, string> = {
-  willing: "我愿意试着靠近你",
-  friend: "我想继续做朋友",
-  time: "我需要一点时间",
-  yes: "我愿意试着靠近你",
-  no: "我想继续做朋友",
-  thinking: "我需要一点时间",
-  "愿意": "我愿意试着靠近你",
-  "不愿意": "我想继续做朋友",
-  "需要再想一想": "我需要一点时间",
-  "我愿意试着靠近你": "我愿意试着靠近你",
-  "我想继续做朋友": "我想继续做朋友",
-  "我需要一点时间": "我需要一点时间",
-};
-
-function formatDate(value: string) {
-  const parts = new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Taipei", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date(value));
-  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
-  return { date: `${get("year")} · ${get("month")} · ${get("day")}`, time: `${get("hour")} : ${get("minute")}`, short: `${get("month")}月${get("day")}日 ${get("hour")} : ${get("minute")}` };
-}
+import AdminControls from "../../components/AdminControls";
 
 export default async function AdminPage() {
   const jar = await cookies();
   if (!verifySession(jar.get("admin_session")?.value, "admin")) redirect("/");
-  const supabase = createSupabaseAdmin();
-  const result = await supabase.from("confession_responses").select("choice, message, submitted_at").order("submitted_at", { ascending: false });
-  let data: Array<{ choice: string | null; message: string | null; submitted_at: string }> = (result.data ?? []) as Array<{ choice: string | null; message: string | null; submitted_at: string }>;
-  let error = result.error;
-  if (error?.code === "42703" || error?.code === "PGRST204") {
-    console.error("admin page message column unavailable", error);
-    const fallback = await supabase.from("confession_responses").select("choice, submitted_at").order("submitted_at", { ascending: false });
-    data = (fallback.data ?? []).map((row) => ({ ...row, message: null })) as Array<{ choice: string | null; message: string | null; submitted_at: string }>;
-    error = fallback.error;
-  }
-  if (error) console.error("admin page load error", error);
-  const responses = data ?? [];
-  const latest = responses[0];
-  return <main className="admin-page"><div className="admin-inner"><header className="admin-header"><span className="eyebrow">LETTER ARCHIVE</span><h1>她最后停在了哪一页。</h1><Butterfly className="admin-butterfly" variant="moon" /></header>{latest ? <section className="admin-latest"><span className="eyebrow">最新选择</span><p className="admin-choice">{latest.choice ? (labels[latest.choice] ?? latest.choice) : "留给时间"}</p><div className="admin-date">{formatDate(latest.submitted_at).date}</div><div className="admin-time">{formatDate(latest.submitted_at).time}</div>{latest.message ? <p className="admin-latest-message">{latest.message}</p> : null}</section> : <p className="admin-empty">这一页还没有被写下。</p>}<section className="admin-history"><h2>选择与留言</h2>{responses.length ? <div className="admin-list"><div className="admin-row admin-row-header" aria-hidden="true"><span>时间</span><span>选择</span><span>留言</span></div>{responses.map((response, index) => <div className="admin-row" key={`${response.submitted_at}-${index}`}><span>{formatDate(response.submitted_at).short}</span><strong>{response.choice ? (labels[response.choice] ?? response.choice) : "只留下了一句话"}</strong><span className="admin-row-message">{response.message ?? ""}</span></div>)}</div> : null}</section><form action="/api/logout" method="post" className="admin-leave"><button type="submit">离开</button></form></div></main>;
+  const db = createSupabaseAdmin();
+  const logs = (await db.from("visitor_logs").select("*").order("entry_time", { ascending: false }).limit(100)).data ?? [];
+  const events = (await db.from("visitor_events").select("visitor_id,event_type")).data ?? [];
+  const responsesResult = await db.from("confession_responses").select("id, choice, message, submitted_at").order("submitted_at", { ascending: false });
+  const responses = (responsesResult.data ?? []) as Array<{ id: string; choice: "willing" | "friend" | "time" | null; message: string | null; submitted_at: string }>;
+  const historyResult = await db.from("response_history").select("id, choice, created_at, ip_address, user_agent", { count: "exact" }).order("created_at", { ascending: false }).limit(200);
+  if (historyResult.error) console.error("response_history query error", historyResult.error);
+  else console.info("response_history count:", historyResult.data?.length ?? 0);
+  const responseHistory = (historyResult.data ?? []) as Array<{ id: string; choice: "willing" | "friend" | "time"; created_at: string; ip_address: string | null; user_agent: string | null }>;
+  const durations = logs.map((x) => x.duration_seconds || 0).filter(Boolean);
+  const unique = (type: string) => new Set(events.filter((x) => x.event_type === type).map((x) => x.visitor_id)).size;
+  const metrics = [
+    ["访问总数", logs.length],
+    ["当前在线", logs.filter((x) => !x.leave_time && Date.now() - new Date(x.entry_time).getTime() < 300000).length],
+    ["平均停留", `${durations.length ? Math.round(durations.reduce((a,b) => a+b, 0)/durations.length) : 0}s`],
+    ["最长停留", `${durations.length ? Math.max(...durations) : 0}s`],
+    ["阅读完成", unique("proposal_page")],
+    ["进入表白", unique("proposal_page")],
+    ["回应按钮", unique("proposal_click")],
+  ];
+  return <main className="admin-page"><div className="admin-inner">
+    <header className="admin-header"><span className="eyebrow">PRIVATE OBSERVATORY</span><h1>她最后停在了哪一页。</h1></header>
+    <section className="admin-metrics">{metrics.map(([label,value]) => <div className="admin-metric" key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</section>
+    <section className="admin-history"><h2>最近访问</h2>{logs.map((log) => <div className="admin-row" key={log.id}><span>{new Date(log.entry_time).toLocaleString("zh-CN")}<br />{log.ip_address || "未知 IP"}</span><strong>{log.device || "PC"} · {log.duration_seconds || 0}s</strong><span className="admin-row-message">{log.last_page || "/"}<br />{log.user_agent || ""}</span></div>)}</section>
+    <section className="admin-response-history">
+      <div className="admin-section-heading"><span className="eyebrow">RESPONSE HISTORY</span><h2>选择历史</h2></div>
+      {responseHistory.length ? <div className="admin-history-table">
+        <div className="admin-history-row admin-history-row-header"><span>时间</span><span>选择内容</span><span>IP</span><span>设备</span></div>
+        {responseHistory.map((item) => <div className="admin-history-row" key={item.id}>
+          <span>{new Date(item.created_at).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", hour12: false })}</span>
+          <strong>{item.choice === "willing" ? "我愿意试着靠近你" : item.choice === "friend" ? "我想继续做朋友" : "我需要一点时间"}</strong>
+          <span>{item.ip_address || "未知 IP"}</span>
+          <span>{/tablet|ipad/i.test(item.user_agent || "") ? "Tablet" : /mobile|android|iphone/i.test(item.user_agent || "") ? "Mobile" : "PC"}</span>
+        </div>)}
+      </div> : <p className="admin-empty">还没有选择历史。</p>}
+    </section>
+    <AdminControls initialResponses={responses} />
+    <form action="/api/logout" method="post" className="admin-leave"><button type="submit">离开</button></form>
+  </div></main>;
 }

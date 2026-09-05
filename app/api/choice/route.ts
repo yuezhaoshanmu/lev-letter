@@ -37,6 +37,13 @@ function isMissingMessageColumn(error: { code?: string; message?: string } | nul
   return error?.code === "42703" || error?.code === "PGRST204" || error?.message?.includes("message");
 }
 
+function requestClientInfo(request: Request) {
+  return {
+    ip_address: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip"),
+    user_agent: request.headers.get("user-agent") ?? "",
+  };
+}
+
 async function visitorFromRequest() {
   const jar = await cookies();
   const token = jar.get("letter_session")?.value;
@@ -98,12 +105,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "database" }, { status: 503 });
     }
 
-    const previousChoice = normalizeChoice(previous?.choice);
-    const isRecentSameChoice = previous && previousChoice === choice && Date.now() - new Date(previous.submitted_at).getTime() < 5000;
-    if (isRecentSameChoice) {
-      return NextResponse.json({ choice, message: null, submittedAt: previous.submitted_at });
-    }
-
     const values: { choice: ChoiceKey; message?: string } = { choice };
     if (message) values.message = message;
     let query = previous?.choice === null
@@ -133,6 +134,18 @@ export async function POST(request: Request) {
       console.error("choice submit error", new Error("Supabase returned no response row"));
       return NextResponse.json({ error: "database" }, { status: 503 });
     }
+    const historyPayload = { choice, ...requestClientInfo(request) };
+    console.info("response_history insert payload:", historyPayload);
+    const history = await supabase.from("response_history").insert(historyPayload);
+    if (history.error) {
+      console.error("choice history insert error", history.error);
+      return NextResponse.json({ error: "database" }, { status: 503 });
+    }
+    const { count: historyCount, error: historyCountError } = await supabase
+      .from("response_history")
+      .select("id", { count: "exact", head: true });
+    if (historyCountError) console.error("response_history count error", historyCountError);
+    else console.info("response_history count:", historyCount);
     return NextResponse.json({ choice: normalizeChoice(data.choice) ?? data.choice, message: "message" in data ? data.message ?? null : null, submittedAt: data.submitted_at });
   } catch (error) {
     console.error("choice submit error", error);

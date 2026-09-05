@@ -287,6 +287,10 @@ button:focus-visible, input:focus-visible { outline: 1px solid rgba(198, 232, 22
 
 .admin-page { min-height: 100svh; position: relative; z-index: 1; padding: 4rem 1.5rem 5rem; background: radial-gradient(ellipse at 52% 8%, rgba(36, 101, 112, .25), transparent 48%), linear-gradient(155deg, #071a22, #0c2828 65%, #193a39); }
 .admin-inner { width: min(680px, 100%); margin: 0 auto; }
+.admin-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin-top: 3rem; }
+.admin-metric { padding: 1.2rem 1.35rem; border: 1px solid rgba(177, 213, 205, .16); border-radius: 6px; background: rgba(11, 38, 38, .42); box-shadow: 0 0 40px rgba(28, 87, 88, .14); }
+.admin-metric span { display: block; margin-bottom: .5rem; color: rgba(183, 217, 208, .6); font: .65rem/1 var(--sans); letter-spacing: .18em; }
+.admin-metric strong { color: var(--moon); font: 400 1.5rem/1.1 var(--serif); letter-spacing: .06em; }
 .admin-header { padding: 8vh 0 10vh; text-align: center; }
 .admin-header h1 { margin: 1.5rem 0 1rem; color: var(--moon); font: 400 clamp(1.7rem, 4vw, 2.5rem)/1.35 var(--serif); letter-spacing: .12em; }
 .admin-butterfly { width: 30px; color: #83beb3; opacity: .65; }
@@ -304,6 +308,26 @@ button:focus-visible, input:focus-visible { outline: 1px solid rgba(198, 232, 22
 .admin-empty { padding: 3rem 0 5rem; color: rgba(211, 229, 223, .6); text-align: center; }
 .admin-leave { margin-top: 5rem; text-align: center; }
 .admin-leave button { border: 0; border-bottom: 1px solid rgba(180, 218, 209, .3); padding: .5rem 0; background: none; color: rgba(203, 229, 218, .55); cursor: pointer; font-size: .75rem; letter-spacing: .18em; }
+.admin-control-section, .admin-message-section { margin-top: 4rem; padding-top: 2.5rem; border-top: 1px solid var(--line); }
+.admin-section-heading h2 { margin: .8rem 0 1.5rem; color: var(--moon); font: 400 1.35rem/1.4 var(--serif); letter-spacing: .08em; }
+.admin-current-label, .admin-current-choice { color: rgba(211, 229, 223, .62); font-family: var(--sans); font-size: .8rem; letter-spacing: .08em; }
+.admin-current-choice { color: var(--paper); font-size: 1rem; }
+.admin-choice-controls { display: grid; gap: .65rem; margin-top: 1.3rem; }
+.admin-choice-controls button, .admin-save, .admin-delete { border: 1px solid rgba(180, 218, 209, .25); padding: .7rem 1rem; background: rgba(20, 57, 57, .3); color: rgba(215, 234, 226, .72); cursor: pointer; text-align: left; font-size: .78rem; }
+.admin-choice-controls button.is-selected { border-color: rgba(200, 236, 226, .75); background: rgba(57, 112, 106, .34); color: #f0f8f2; }
+.admin-control-footer { display: flex; align-items: center; gap: 1rem; margin-top: 1rem; color: rgba(203, 229, 218, .6); font-size: .75rem; }
+.admin-save { text-align: center; border-bottom-color: rgba(180, 218, 209, .5); }
+.admin-save:disabled, .admin-delete:disabled { cursor: default; opacity: .4; }
+.admin-message-list { display: grid; gap: 1rem; }
+.admin-message-item { padding: 1rem 1.1rem; border-left: 1px solid rgba(169, 215, 204, .35); background: rgba(11, 38, 38, .3); }
+.admin-message-meta { color: rgba(177, 211, 204, .5); font: .68rem var(--sans); letter-spacing: .08em; }
+.admin-message-item p { margin: .7rem 0 1rem; color: rgba(216, 237, 227, .78); line-height: 1.8; white-space: pre-wrap; }
+.admin-delete { padding: .35rem .6rem; font-size: .68rem; text-align: center; }
+.admin-response-history { margin-top: 4rem; padding-top: 2.5rem; border-top: 1px solid var(--line); }
+.admin-history-table { overflow-x: auto; }
+.admin-history-row { display: grid; grid-template-columns: minmax(10rem, 1.2fr) minmax(13rem, 1.5fr) minmax(9rem, 1fr) minmax(5rem, .6fr); gap: 1rem; align-items: start; padding: .85rem 0; border-bottom: 1px solid rgba(177, 213, 205, .09); color: rgba(204, 226, 218, .68); font-family: var(--sans); font-size: .78rem; }
+.admin-history-row strong { color: var(--paper); font-weight: 400; }
+.admin-history-row-header { padding-top: 0; color: rgba(177, 211, 204, .46); font-size: .68rem; letter-spacing: .12em; }
 
 .reveal { opacity: 0; transform: translateY(14px); transition: opacity 900ms cubic-bezier(.22, 1, .36, 1), transform 900ms cubic-bezier(.22, 1, .36, 1); }
 .reveal.is-visible { opacity: 1; transform: translateY(0); }
@@ -386,6 +410,8 @@ button:focus-visible, input:focus-visible { outline: 1px solid rgba(198, 232, 22
   .ending-choices button { padding-inline: .9rem; font-size: .75rem; }
   .admin-row { grid-template-columns: 1fr; gap: .35rem; }
   .admin-row-header { display: none; }
+  .admin-history-row { grid-template-columns: 1fr; gap: .35rem; }
+  .admin-history-row-header { display: none; }
   .easter-egg { right: 1.2rem; bottom: 4.4rem; }
 }
 
