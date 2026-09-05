@@ -54,6 +54,10 @@ SUPABASE_SERVICE_ROLE_KEY=Supabase服务端密钥
 
 也可以在 Supabase 中直接进入 **Table Editor → confession_responses** 检查 `choice`、`message` 与 `submitted_at`。首次升级请执行 `supabase/add_message.sql`，它会补充留言字段、允许只留言记录，并将历史选择统一转换为 `willing`、`friend`、`time`。
 
+### 完整访问轨迹
+
+在已有站点上升级访问统计时，请在 Supabase **SQL Editor** 中执行一次 `supabase/visitor_analytics.sql`。脚本会保留现有 `visitor_logs` 和旧事件字段，并新增 `visitor_sessions`、访问轨迹字段及事件索引。执行后，管理员后台的“访问时间线”会显示每位匿名访客的每次访问、停留时间、页面和行为。
+
 ## 更新 Word 正文与音乐
 
 替换根目录 `.docx` 后运行 `npm run parse-letter`；`npm run dev` 和 `npm run build` 会自动解析。音乐文件放到 `public/music/background.mp3`，按钮会在文件不存在时自动隐藏。

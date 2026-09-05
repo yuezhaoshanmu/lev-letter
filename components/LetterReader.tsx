@@ -85,7 +85,11 @@ export default function LetterReader({ data, onNext, onMoodChange }: LetterReade
       setProgress(current);
       const sourcePosition = current * data.paragraphs.length;
       const active = chapters.reduce((last, chapter) => (chapter.at <= sourcePosition ? chapter : last), chapters[0]);
-      if (active && !visited.includes(active.title)) { setVisited((prev) => [...prev, active.title]); trackVisitor("read_section", { section: active.title }, "/"); }
+      if (active && !visited.includes(active.title)) {
+        setVisited((prev) => [...prev, active.title]);
+        trackVisitor("chapter_view", { section: active.title }, "/");
+        trackVisitor("read_section", { section: active.title }, "/");
+      }
       onMoodChange(active?.mood ?? "forest");
     };
     update();

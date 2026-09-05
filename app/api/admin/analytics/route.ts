@@ -40,9 +40,17 @@ export async function GET(request: Request) {
   const logs = result.data ?? [];
   console.info("[admin analytics] first visitor record", logs[0] ?? null);
   console.info("[admin analytics] 查询完成", { table: "visitor_logs", count: logs.length });
+  const sessionsResult = await db.from("visitor_sessions").select("*").order("entry_time", { ascending: false }).limit(200);
+  const sessions = sessionsResult.data ?? [];
+  const sessionIds = sessions.map((session) => session.id);
+  const eventsResult = sessionIds.length
+    ? await db.from("visitor_events").select("session_id,event_type,page,event_time,metadata,event_data").in("session_id", sessionIds).order("event_time", { ascending: true })
+    : { data: [], error: null };
   return NextResponse.json({
     total: logs.length,
     online: logs.filter((log) => !log.leave_time && Date.now() - new Date(log.created_at).getTime() < 300000).length,
     logs,
+    sessions,
+    events: eventsResult.data ?? [],
   });
 }

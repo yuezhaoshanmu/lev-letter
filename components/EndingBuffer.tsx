@@ -25,7 +25,14 @@ export default function EndingBuffer({ onContinue }: EndingBufferProps) {
   const isCover = page === -1;
   const isClosing = page === pages.length;
   const pageData = page >= 0 && page < pages.length ? pages[page] : null;
-  const advance = () => setPage((current) => { const next = Math.min(pages.length, current + 1); if (next < pages.length) trackVisitor("read_section", { section: pages[next].title }, "/"); return next; });
+  const advance = () => setPage((current) => {
+    const next = Math.min(pages.length, current + 1);
+    if (next < pages.length) {
+      trackVisitor("chapter_view", { section: pages[next].title }, "/");
+      trackVisitor("read_section", { section: pages[next].title }, "/");
+    }
+    return next;
+  });
   const retreat = () => setPage((current) => Math.max(-1, current - 1));
 
   useEffect(() => {

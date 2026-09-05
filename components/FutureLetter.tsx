@@ -57,6 +57,7 @@ export default function FutureLetter({ onBack }: FutureLetterProps) {
   const [messageState, setMessageState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
+    trackVisitor("proposal_view", {}, "/");
     trackVisitor("proposal_page", {}, "/");
     let active = true;
     fetch("/api/choice").then((response) => response.ok ? response.json() : null).then((result) => {
@@ -76,6 +77,7 @@ export default function FutureLetter({ onBack }: FutureLetterProps) {
     setChoiceState("saving");
     setAnswer(choice);
     setPressedChoice(choice);
+    trackVisitor("button_click", { answer: choiceValues[choice] }, "/");
     trackVisitor("proposal_click", { answer: choiceValues[choice] }, "/");
     window.setTimeout(() => setPressedChoice(null), reduceMotion ? 0 : 300);
     const startedAt = performance.now();
