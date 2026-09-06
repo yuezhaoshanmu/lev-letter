@@ -26,7 +26,7 @@ export default function MusicToggle({ visible = true, onLongPress }: MusicToggle
       suppressClickRef.current = true;
       setPressing(false);
       onLongPress();
-    }, 1900);
+    }, 3000);
   };
   const handleClick = () => {
     if (suppressClickRef.current) {

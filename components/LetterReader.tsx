@@ -10,8 +10,15 @@ import { trackVisitor } from "./VisitorTracker";
 type LetterReaderProps = { data: LetterData; onNext: () => void; onMoodChange: (mood: string) => void };
 
 function Paragraph({ paragraph }: { paragraph: LetterParagraph }) {
-  if (paragraph.sourceIndex >= 1498 && paragraph.sourceIndex <= 1509) return null;
-  if (paragraph.sourceIndex === 1497) return <p className="letter-paragraph letter-opening-replacement reveal">不用急着回答。<br />也不用急着决定什么。<br />你可以慢慢读。<br />如果某一句话，<br />刚好落在你的心里。<br />那就已经很好。</p>;
+  if (paragraph.sourceIndex === 1500) return (
+    <>
+      <p className="letter-paragraph reveal">不用急着回答。</p>
+      <p className="letter-paragraph reveal">也不用急着决定什么。</p>
+      <p className="letter-paragraph reveal">你可以慢慢读。</p>
+      <p className="letter-paragraph reveal">如果某一句话，<br />刚好落在你的心里。</p>
+      <p className="letter-paragraph reveal">那就已经很好。</p>
+    </>
+  );
   if (paragraph.type === "blank") return <div className="letter-blank" aria-hidden="true" data-source-index={paragraph.sourceIndex} />;
   if (paragraph.type === "rule") return <div className="letter-rule" data-source-index={paragraph.sourceIndex} aria-hidden="true" />;
   const breathing = highlightParagraphs.has(paragraph.sourceIndex);
