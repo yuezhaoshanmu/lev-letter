@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { LetterData } from "../lib/letter";
 import AmbientBackground from "./AmbientBackground";
+import Butterfly from "./Butterfly";
 import EndingBuffer from "./EndingBuffer";
 import FutureLetter from "./FutureLetter";
+import HiddenLetter from "./HiddenLetter";
 import LetterReader from "./LetterReader";
 import MusicInvitation from "./MusicInvitation";
 import MusicToggle from "./MusicToggle";
@@ -13,8 +15,9 @@ import NameReveal from "./NameReveal";
 import PasswordGate from "./PasswordGate";
 import UnlockRitual from "./UnlockRitual";
 import { useMusic } from "./AudioProvider";
+import { trackVisitor } from "./VisitorTracker";
 
-type Stage = "ritual" | "name-reveal" | "leaving" | "reader" | "buffer" | "future-letter";
+type Stage = "ritual" | "name-reveal" | "leaving" | "reader" | "buffer" | "future-letter" | "hidden-letter";
 type LetterExperienceProps = { data: LetterData | null; passwordRequired: boolean; initialUnlocked?: boolean };
 
 export default function LetterExperience({ data, passwordRequired, initialUnlocked = false }: LetterExperienceProps) {
@@ -26,6 +29,9 @@ export default function LetterExperience({ data, passwordRequired, initialUnlock
   const [eggClicks, setEggClicks] = useState(0);
   const [eggVisible, setEggVisible] = useState(false);
   const [musicInvitationVisible, setMusicInvitationVisible] = useState(false);
+  const [hiddenLetterOpening, setHiddenLetterOpening] = useState(false);
+  const [hiddenLetterClosing, setHiddenLetterClosing] = useState(false);
+  const hiddenLetterReturnPositionRef = useRef(0);
   const { isPlaying, resumeMusic, cancelPreparedPlayback } = useMusic();
   const router = useRouter();
 
@@ -88,6 +94,37 @@ export default function LetterExperience({ data, passwordRequired, initialUnlock
     });
   };
   const changeMood = useCallback((nextMood: string) => setMood(nextMood), []);
+  const openHiddenLetter = useCallback(() => {
+    hiddenLetterReturnPositionRef.current = window.scrollY;
+    try {
+      window.sessionStorage.setItem("hiddenLetterReturnPosition", String(window.scrollY));
+    } catch {
+    }
+    setHiddenLetterOpening(true);
+    window.setTimeout(() => {
+      setHiddenLetterOpening(false);
+      setStage("hidden-letter");
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }, 700);
+  }, []);
+  const returnToMainLetter = useCallback(() => {
+    let returnPosition = hiddenLetterReturnPositionRef.current;
+    try {
+      const storedPosition = Number(window.sessionStorage.getItem("hiddenLetterReturnPosition"));
+      if (Number.isFinite(storedPosition) && storedPosition >= 0) returnPosition = storedPosition;
+    } catch {
+    }
+    trackVisitor("hidden_letter_close", {
+      source: "hidden_letter",
+      action: "return_main_letter",
+    }, "/hidden-letter");
+    setHiddenLetterClosing(true);
+    window.setTimeout(() => {
+      setHiddenLetterClosing(false);
+      setStage("reader");
+      window.setTimeout(() => window.scrollTo({ top: returnPosition, behavior: "smooth" }), 50);
+    }, 700);
+  }, []);
   const gate = passwordRequired && !hasLetterAccess;
 
   useEffect(() => {
@@ -121,8 +158,11 @@ export default function LetterExperience({ data, passwordRequired, initialUnlock
         {stage === "reader" && data ? <LetterReader data={data} onNext={next} onMoodChange={changeMood} /> : null}
         {stage === "buffer" ? <EndingBuffer onContinue={continueToChoice} /> : null}
         {stage === "future-letter" ? <FutureLetter onBack={back} /> : null}
+        {stage === "hidden-letter" ? <HiddenLetter onReturnToLetter={returnToMainLetter} /> : null}
       </div>}
-      <MusicToggle visible={!gate && stage !== "ritual"} />
+      <MusicToggle visible={!gate && stage !== "ritual" && stage !== "hidden-letter"} onLongPress={openHiddenLetter} />
+      {hiddenLetterOpening ? <div className="hidden-letter-opening" aria-hidden="true"><div className="hidden-letter-opening-moon" /><Butterfly className="hidden-letter-opening-butterfly" variant="green" /></div> : null}
+      {hiddenLetterClosing ? <div className="hidden-letter-closing" aria-hidden="true"><div className="hidden-letter-closing-paper" /><Butterfly className="hidden-letter-closing-butterfly" variant="green" /></div> : null}
       <MusicInvitation visible={false} onClose={finishMusicInvitation} />
       {!gate ? <div className={`easter-egg ${eggVisible ? "is-visible" : ""}`} role="status" aria-live="polite">
         <span>你发现这里了。</span>

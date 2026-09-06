@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const TARGET_VOLUME = 0.15;
 const FADE_IN_MS = 2000;
 const FADE_OUT_MS = 1000;
+const clampVolume = (value: number) => Math.max(0, Math.min(1, value));
 
 type MusicContextValue = {
   isAvailable: boolean;
@@ -49,7 +50,8 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     const started = performance.now();
     const step = (time: number) => {
       const progress = Math.min((time - started) / duration, 1);
-      audio.volume = start + (target - start) * progress;
+      const safeVolume = clampVolume(start + (target - start) * progress);
+      audio.volume = safeVolume;
       if (progress < 1) fadeFrameRef.current = window.requestAnimationFrame(step);
       else { fadeFrameRef.current = null; onComplete?.(); }
     };
@@ -71,7 +73,7 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     stopFade();
     shouldBePlayingRef.current = false;
     preparedPlayRef.current = null;
-    audio.volume = 0;
+    audio.volume = clampVolume(0);
     audio.loop = true;
     setIsLoading(false);
     // Password submission only prepares the player. Playback starts from an explicit music choice.
@@ -106,7 +108,7 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     preparedPlayRef.current = null;
     audio.pause();
     audio.currentTime = 0;
-    audio.volume = 0;
+    audio.volume = clampVolume(0);
     setIsPlaying(false);
     setIsLoading(false);
   }, [stopFade]);
@@ -124,7 +126,7 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     if (!audio) return false;
     stopFade();
     setIsLoading(true);
-    audio.volume = 0;
+    audio.volume = clampVolume(0);
     audio.loop = true;
     preparedPlayRef.current = null;
     try {

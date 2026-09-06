@@ -18,6 +18,7 @@ type VisitorSession = {
 };
 
 type VisitorEvent = {
+  visitor_id?: string | null;
   session_id: string | null;
   event_type: string;
   page: string | null;
@@ -100,6 +101,13 @@ export default async function AdminPage() {
     : { data: [], error: null };
   if (timelineEventsResult.error) console.error("[admin analytics] visitor_events timeline query error", timelineEventsResult.error);
   const timelineEvents = (timelineEventsResult.data ?? []) as VisitorEvent[];
+  const hiddenLettersResult = await db.from("visitor_events")
+    .select("visitor_id,session_id,event_time,event_data,metadata")
+    .eq("event_type", "hidden_letter_open")
+    .order("event_time", { ascending: false })
+    .limit(200);
+  if (hiddenLettersResult.error) console.error("[admin analytics] hidden letter query error", hiddenLettersResult.error);
+  const hiddenLetters = (hiddenLettersResult.data ?? []) as VisitorEvent[];
   const sessionEvents = new Map<string, VisitorEvent[]>();
   timelineEvents.forEach((event) => {
     if (!event.session_id) return;
@@ -182,6 +190,21 @@ export default async function AdminPage() {
           <span>{/tablet|ipad/i.test(item.user_agent || "") ? "Tablet" : /mobile|android|iphone/i.test(item.user_agent || "") ? "Mobile" : "PC"}</span>
         </div>)}
       </div> : <p className="admin-empty">还没有选择历史。</p>}
+    </section>
+    <section className="admin-hidden-letter">
+      <div className="admin-section-heading"><span className="eyebrow">HIDDEN LETTER</span><h2>隐藏彩蛋记录</h2></div>
+      {hiddenLetters.length ? <div className="admin-history-table">
+        <div className="admin-hidden-letter-row admin-history-row-header"><span>访客/session</span><span>打开状态</span><span>打开时间</span><span>来源</span></div>
+        {hiddenLetters.map((event, index) => {
+          const metadata = event.metadata ?? event.event_data ?? {};
+          return <div className="admin-hidden-letter-row" key={`${event.session_id}-${event.event_time}-${index}`}>
+            <span>{event.visitor_id || "未知访客"}<br />{event.session_id || "未知 session"}</span>
+            <strong>已打开</strong>
+            <span>{formatDateTime(event.event_time)}</span>
+            <span>{metadata.trigger === "long_press" ? "音乐按钮长按" : "音乐按钮"}</span>
+          </div>;
+        })}
+      </div> : <p className="admin-empty">还没有隐藏彩蛋打开记录。</p>}
     </section>
     <AdminControls initialResponses={responses} />
     <form action="/api/logout" method="post" className="admin-leave"><button type="submit">离开</button></form>

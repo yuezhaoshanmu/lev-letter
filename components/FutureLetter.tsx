@@ -3,11 +3,11 @@
 import { ArrowDownRight, RotateCcw } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
-import Butterfly from "./Butterfly";
 import { trackVisitor } from "./VisitorTracker";
 
 type Choice = "我愿意试着靠近你" | "我想继续做朋友" | "我需要一点时间";
 type FutureLetterProps = { onBack: () => void };
+type Phase = "reading" | "transition" | "response" | "thanks";
 
 const choices: Choice[] = ["我愿意试着靠近你", "我想继续做朋友", "我需要一点时间"];
 const choiceKeys: Record<Choice, string> = {
@@ -17,23 +17,16 @@ const choiceKeys: Record<Choice, string> = {
 };
 const choiceValues: Record<Choice, "willing" | "friend" | "time"> = { "我愿意试着靠近你": "willing", "我想继续做朋友": "friend", "我需要一点时间": "time" };
 const storedChoiceLabels: Record<string, Choice> = {
-  willing: "我愿意试着靠近你",
-  friend: "我想继续做朋友",
-  time: "我需要一点时间",
-  yes: "我愿意试着靠近你",
-  no: "我想继续做朋友",
-  thinking: "我需要一点时间",
-  "愿意": "我愿意试着靠近你",
-  "不愿意": "我想继续做朋友",
-  "需要再想一想": "我需要一点时间",
-  "我愿意试着靠近你": "我愿意试着靠近你",
-  "我想继续做朋友": "我想继续做朋友",
-  "我需要一点时间": "我需要一点时间",
+  willing: "我愿意试着靠近你", friend: "我想继续做朋友", time: "我需要一点时间",
+  yes: "我愿意试着靠近你", no: "我想继续做朋友", thinking: "我需要一点时间",
+  "愿意": "我愿意试着靠近你", "不愿意": "我想继续做朋友", "需要再想一想": "我需要一点时间",
+  "我愿意试着靠近你": "我愿意试着靠近你", "我想继续做朋友": "我想继续做朋友", "我需要一点时间": "我需要一点时间",
 };
+
 const responseCopy: Record<Choice, string[]> = {
-  "我愿意试着靠近你": ["谢谢你。", "那以后，", "请允许我慢慢走近你的世界。"],
-  "我想继续做朋友": ["谢谢你告诉我真实的想法。", "能够认识你，", "本身就是一件很幸运的事情。"],
-  "我需要一点时间": ["没关系。", "有些答案，", "本来就应该慢一点到来。"],
+  "我愿意试着靠近你": ["谢谢你愿意打开这一扇门。", "我很开心，也很珍惜这一刻。"],
+  "我想继续做朋友": ["谢谢你愿意认真告诉我答案。", "这一次勇敢迈出去，", "本身已经是一份收获。"],
+  "我需要一点时间": ["不用急。", "有些答案，", "需要时间慢慢确认。"],
 };
 
 const sections = [
@@ -49,10 +42,10 @@ export default function FutureLetter({ onBack }: FutureLetterProps) {
   const [opened, setOpened] = useState(false);
   const [opening, setOpening] = useState(false);
   const [answer, setAnswer] = useState<Choice | null>(null);
+  const [phase, setPhase] = useState<Phase>("reading");
   const [busy, setBusy] = useState(false);
   const [choiceState, setChoiceState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pressedChoice, setPressedChoice] = useState<Choice | null>(null);
-  const [responseVisible, setResponseVisible] = useState(false);
   const [message, setMessage] = useState("");
   const [messageState, setMessageState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
@@ -65,7 +58,7 @@ export default function FutureLetter({ onBack }: FutureLetterProps) {
       if (active && stored) {
         setAnswer(stored);
         setChoiceState("saved");
-        setResponseVisible(true);
+        setPhase("thanks");
       }
     }).catch(() => undefined);
     return () => { active = false; };
@@ -77,24 +70,23 @@ export default function FutureLetter({ onBack }: FutureLetterProps) {
     setChoiceState("saving");
     setAnswer(choice);
     setPressedChoice(choice);
+    setPhase("transition");
     trackVisitor("button_click", { answer: choiceValues[choice] }, "/");
     trackVisitor("proposal_click", { answer: choiceValues[choice] }, "/");
-    window.setTimeout(() => setPressedChoice(null), reduceMotion ? 0 : 300);
-    const startedAt = performance.now();
+    window.setTimeout(() => setPressedChoice(null), reduceMotion ? 0 : 500);
+    window.setTimeout(() => setPhase("response"), reduceMotion ? 0 : 3000);
     try {
       const response = await fetch("/api/choice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ choice: choiceValues[choice], message: message.trim() }) });
       if (!response.ok) {
         setAnswer(null);
-        setResponseVisible(false);
+        setPhase("reading");
         setChoiceState("error");
       } else {
         setChoiceState("saved");
-        const remaining = reduceMotion ? 0 : Math.max(0, 1000 - (performance.now() - startedAt));
-        window.setTimeout(() => setResponseVisible(true), remaining);
       }
     } catch {
       setAnswer(null);
-      setResponseVisible(false);
+      setPhase("reading");
       setChoiceState("error");
     } finally {
       setBusy(false);
@@ -122,16 +114,31 @@ export default function FutureLetter({ onBack }: FutureLetterProps) {
   };
 
   const choiceClass = answer ? `choice-${choiceKeys[answer]}` : "";
+  const responseLines = answer ? responseCopy[answer] : [];
+
+  useEffect(() => {
+    if (phase !== "response" || !answer) return;
+    const delay = reduceMotion ? 1400 : 5000;
+    const timer = window.setTimeout(() => setPhase("thanks"), delay);
+    return () => window.clearTimeout(timer);
+  }, [answer, phase, reduceMotion]);
+
   return (
-    <motion.main className={`future-letter-scene ${choiceClass}`} initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.15 }}>
+    <motion.main className={`future-letter-scene ${choiceClass} phase-${phase}`} initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.15 }}>
       <div className="ending-stars" aria-hidden="true" />
-      <Butterfly className="future-letter-butterfly future-letter-butterfly-blue" variant="blue" />
-      <Butterfly className="future-letter-butterfly future-letter-butterfly-green" variant="green" />
+      <div className="choice-moon" aria-hidden="true" />
+      <div className="choice-growth-light" aria-hidden="true" />
+      <div className="choice-leaves" aria-hidden="true"><i /><i /><i /></div>
+      <div className="choice-sprout" aria-hidden="true"><i /><i /></div>
+      <div className="choice-clock" aria-hidden="true"><span /><span /></div>
       <div className="future-letter-copy">
         <AnimatePresence mode="wait" initial={false}>
-          {!opened ? (
+          {phase === "reading" && !opened ? (
             <motion.section key="envelope" className="future-envelope-stage" initial={reduceMotion ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={reduceMotion ? undefined : { opacity: 0, y: -8 }} transition={{ duration: .75 }}>
               <span className="eyebrow">还有一封信。<br />写给未来。</span>
+              <span className="future-letter-moth future-letter-moth-one" aria-hidden="true" />
+              <span className="future-letter-moth future-letter-moth-two" aria-hidden="true" />
+              <span className="future-letter-moth future-letter-moth-three" aria-hidden="true" />
               <button className={`future-envelope ${opening ? "is-opening" : ""}`} type="button" onClick={openEnvelope} aria-label="打开给未来的信" disabled={opening}>
                 <span className="future-envelope-flap" aria-hidden="true" />
                 <span className="future-envelope-paper" aria-hidden="true" />
@@ -140,7 +147,7 @@ export default function FutureLetter({ onBack }: FutureLetterProps) {
               </button>
               <p className="future-envelope-hint">点击信封，慢慢打开</p>
             </motion.section>
-          ) : (
+          ) : phase === "reading" ? (
             <motion.section key="letter" className="future-letter-content" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .8 }}>
               <div className="future-letter-heading"><span className="eyebrow">给未来的你</span><span className="future-letter-rule" /></div>
               <div className="future-letter-sections">
@@ -150,19 +157,31 @@ export default function FutureLetter({ onBack }: FutureLetterProps) {
                   </motion.section>
                 ))}
               </div>
-              <div className="future-letter-choice-intro">
-                <p>不用急着回答。</p>
-                <p>因为喜欢这件事。</p>
-                <p>本来就不是一道需要马上作答的问题。</p>
-              </div>
+              <div className="future-letter-choice-intro"><p>不用急着回答。</p><p>因为喜欢这件事。</p><p>本来就不是一道需要马上作答的问题。</p></div>
               <div className="future-letter-choices" aria-label="你的回答">
-                {choices.map((choice) => <button key={choice} type="button" disabled={busy || answer !== null} onClick={() => choose(choice)} className={`${answer === choice ? "is-selected" : ""} ${pressedChoice === choice ? "is-pressed" : ""}`}>
-                  <span aria-hidden="true">{choice === "我愿意试着靠近你" ? "🌿" : choice === "我想继续做朋友" ? "🌙" : "🕊"}</span> {choice}
-                </button>)}
+                {choices.map((choice) => <button key={choice} type="button" disabled={busy || answer !== null} onClick={() => choose(choice)} className={`${answer === choice ? "is-selected" : ""} ${pressedChoice === choice ? "is-pressed" : ""}`}><span aria-hidden="true">·</span> {choice}</button>)}
               </div>
-              <p className={`future-letter-choice-status ${choiceState === "error" ? "is-error" : ""}`} role="status" aria-live="polite">{choiceState === "saving" ? "正在保存..." : choiceState === "saved" ? "已收到你的回答。" : choiceState === "error" ? "保存失败，请稍后再试。" : ""}</p>
-              <p className="future-letter-thanks">无论你的答案是什么。<br />谢谢你读完这些文字。</p>
-              <div className={`future-letter-response ${answer && responseVisible ? "is-visible" : ""}`} role="status" aria-live="polite">{answer && responseCopy[answer].map((line) => <p key={line}>{line}</p>)}</div>
+              <p className={`future-letter-choice-status ${choiceState === "error" ? "is-error" : ""}`} role="status" aria-live="polite">{choiceState === "error" ? "保存失败，请稍后再试。" : ""}</p>
+              <button className="back-to-letter future-letter-back" type="button" onClick={onBack}><RotateCcw size={15} strokeWidth={1.2} />再看一遍</button>
+            </motion.section>
+          ) : phase === "transition" ? (
+            <motion.section key="transition" className="choice-transition" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .5 }}>
+              <span className="choice-transition-envelope" aria-hidden="true"><i /></span>
+              <span className="choice-transition-label">有一封回信，正在抵达。</span>
+            </motion.section>
+          ) : phase === "response" ? (
+            <motion.section key="response" className="choice-response-paper" initial={reduceMotion ? false : { opacity: 0, y: 20, scale: .8 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: reduceMotion ? 0 : 1.25, ease: [.22, 1, .36, 1] }}>
+              <span className="response-paper-fold" aria-hidden="true" />
+              <span className="eyebrow">写给此刻的你</span>
+              <div className="choice-response-lines" role="status" aria-live="polite">
+                {responseLines.map((line, index) => <motion.p key={`${line}-${index}`} initial={reduceMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6, delay: reduceMotion ? 0 : index * .8 }}>{line}</motion.p>)}
+              </div>
+            </motion.section>
+          ) : (
+            <motion.section key="thanks" className="choice-thanks" initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .9 }}>
+              <span className="thanks-star" aria-hidden="true" />
+              <span className="eyebrow">谢谢你认真看完。</span>
+              <p className="thanks-letter-copy">这封信，会一直留在这里。</p>
               <section className="ending-message future-letter-message" aria-labelledby="future-message-title">
                 <p id="future-message-title" className="ending-message-copy">如果还有一句话想告诉我。<br />可以写在这里。<br />不用想怎么说。<br />我只是想听见你的声音。</p>
                 <textarea value={message} onChange={(event) => { setMessage(event.target.value); if (messageState !== "idle") setMessageState("idle"); }} placeholder="如果还有一句想告诉我的话，\n可以写在这里。" rows={3} maxLength={1000} aria-label="想告诉我的话" />
